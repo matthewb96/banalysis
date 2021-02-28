@@ -1,0 +1,11 @@
+name: banalysis
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python[version='~=3.9']
+  - pandas[version='>=1.2']
+  - numpy[version='>=1.20']
+  - black[version='>=20']
+  - pylint[version='>=2.6']
+  - bokeh[version='>=2.2']
