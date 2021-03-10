@@ -12,10 +12,13 @@ from pathlib import Path
 import pandas as pd
 
 # Local imports
-import banalysis.errors as ban_errors
+from . import errors as ban_errors
 
 ##### CONSTANTS #####
 LOG = logging.getLogger(__name__)
+EMPTY_MIDATA = pd.DataFrame(
+    columns=["date", "type", "description", "amount", "abs_amount", "colour", "balance"]
+)
 
 ##### FUNCTIONS #####
 def read_midata(path: Path) -> pd.DataFrame:
@@ -26,9 +29,10 @@ def read_midata(path: Path) -> pd.DataFrame:
 
     Parameters
     ----------
-    path : Path
-        Path to the CSV file, which should be in
-        midata format containing the following
+    path : Path, str or file-like object
+        Path to the CSV file or file-like object to be
+        passed to `pandas.read_csv`. The file should be
+        in midata format containing the following
         columns: date, type, merchant/description,
         debit/credit and balance.
 
@@ -36,7 +40,8 @@ def read_midata(path: Path) -> pd.DataFrame:
     -------
     pd.DataFrame
         DataFrame with the following columns:
-        date, type, description, amount and balance.
+        date, type, description, amount, abs_amount,
+        colour and balance.
 
     Raises
     ------
@@ -52,6 +57,12 @@ def read_midata(path: Path) -> pd.DataFrame:
     for c in ("amount", "balance"):
         df[c] = pd.to_numeric(df[c].str.replace("£", ""), errors="raise")
     df["date"] = pd.to_datetime(df["date"], format="%d/%m/%Y", errors="raise").dt.date
+
+    df["abs_amount"] = abs(df["amount"])
+    # Colour amounts based on negative/positive values
+    df.loc[df["amount"] < 0, "colour"] = "red"
+    df.loc[df["amount"] == 0, "colour"] = "grey"
+    df.loc[df["amount"] > 0, "colour"] = "green"
     return df
 
 
